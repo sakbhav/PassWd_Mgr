@@ -26,7 +26,6 @@
 #include <Dwmapi.h>
 #include <GdiPlus.h>
 #include <strsafe.h>
-#include <vld.h>
 #include "timemgr.h"
 #pragma comment(lib,"GdiPlus.lib")
 #pragma comment(lib,"Comdlg32.lib")
