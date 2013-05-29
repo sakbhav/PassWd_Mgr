@@ -40,7 +40,7 @@ processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")
 #define MAX_LOADSTRING 100
 int num=8,savin=0,sa=0,row=0,column=1,n=0,k=0,change=0;
 int hidepasswd=1;
-char pset[]="abcdefghijklmnopqrstuvwxyz",buffer[10];
+char pset[]="abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ",buffer[10];
 char nset[]="0123456789",buffern[10];
 char sym[100]="",buffers[10];
 int nnum=0,nsym=0,tempnum=2,tempsym=2,filesize=0,listflg=0,lremcou=0,listsel=0,editflag=0,readsize=0,cansave=0;//,savtitle=0;
@@ -48,7 +48,7 @@ int req_day=0,req_mon=0,req_year=0;
 int tim = tim +((int)time(NULL));
 wchar_t number[10],temp[10];
 wchar_t symbol[100],master[100];
-wchar_t * uname=0,* web=0,* oth=0;//,write[1200];//,newpass[100];
+wchar_t * uname=0,* web=0,* oth=0;
 wchar_t alpha[10];
 wchar_t snbuf[3];
 wchar_t sy[10];
