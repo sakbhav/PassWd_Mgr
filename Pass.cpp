@@ -39,7 +39,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 	GdiplusStartupInput gdiplusStartupInput;
 	GdiplusStartup(&m_GdiplusToken, &gdiplusStartupInput, NULL);
 
-   hInst = hInstance; // Store instance handle in our global variable
+   hInst = hInstance;						 // Store instance handle in our global variable
 
     hWnd = CreateWindow(szWindowClass, szTitle, WS_OVERLAPPED|WS_CAPTION|WS_SYSMENU|WS_MINIMIZEBOX|BN_SETFOCUS,
 		   CW_USEDEFAULT, 0, 280, 350, NULL, NULL, hInstance, NULL);
@@ -222,7 +222,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 						if(!wcscmp(md5,mdcheck))
 						{
 							n=0;row=0;column=1;k=0;
-							DialogBox(hInst, MAKEINTRESOURCE(IDD_DIALOG2), hWnd, Master);
+							DialogBox(hInst, MAKEINTRESOURCE(IDD_DIALOG4), hWnd, Master);
 							decrypt(master,read);
 							if(read[0]==L'p'&&read[1]==L'a'&&read[2]==L's'&&read[3]==L's')
 							{
@@ -231,6 +231,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 								DialogBox(hInst, MAKEINTRESOURCE(IDD_DIALOG3), hWnd, View);
 								hMenu = GetMenu(hWnd);
 								EnableMenuItem(hMenu,ID_VIEW_VIEWPASSWD,MF_ENABLED);
+								EnableMenuItem(hMenu,ID_VIEW_CHANGEMASTERPASSWORD,MF_ENABLED);
 								EnableMenuItem(hMenu,ID_FILE_CLOSE,MF_ENABLED);
 								DrawMenuBar(hWnd);
 							}
@@ -259,6 +260,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 					ofn.lpstrFile=szFile;
 					savin=0;
 					EnableMenuItem(hMenu,ID_VIEW_VIEWPASSWD,MF_DISABLED);
+					EnableMenuItem(hMenu,ID_VIEW_CHANGEMASTERPASSWORD,MF_DISABLED);
 					EnableMenuItem(hMenu,ID_FILE_CLOSE,MF_DISABLED);
 				};
 				break;
@@ -313,6 +315,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 							WriteFile(hf,mdwrite,2*wcslen(mdwrite),&byteswritten,NULL);
 							CloseHandle(hf);
 							EnableMenuItem(hMenu,ID_VIEW_VIEWPASSWD,MF_ENABLED);
+							EnableMenuItem(hMenu,ID_VIEW_CHANGEMASTERPASSWORD,MF_ENABLED);
 						}
 						else cansave=0;
 					};
@@ -458,6 +461,52 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 					{
 						MessageBox(hWnd,L"Wrong Master Password !",NULL,MB_ICONERROR);
 						savin=0;
+					};
+				}
+				break;
+			case ID_VIEW_CHANGEMASTERPASSWORD:
+				{
+					hf = CreateFile(ofn.lpstrFile, 
+						GENERIC_READ,
+						0,
+						(LPSECURITY_ATTRIBUTES) NULL,
+						OPEN_EXISTING,
+						FILE_ATTRIBUTE_NORMAL,
+						(HANDLE) NULL);
+					filesize=GetFileSize(hf,NULL);
+					mdread = new wchar_t[(filesize/2)+4];
+					ReadFile(hf,mdread,filesize,&bytestoread,NULL);
+					mdread[filesize/2]=0;
+					CloseHandle(hf);
+					read = &mdread[32];
+					swprintf(mdcheck,L"%0.32s",mdread);
+					md5fun(read,md5);
+					if(!wcscmp(md5,mdcheck))
+					{
+						n=0;row=0;column=1;k=0;
+						DialogBox(hInst, MAKEINTRESOURCE(IDD_DIALOG4), hWnd, Master);
+						decrypt(master,read);
+						if(read[0]==L'p'&&read[1]==L'a'&&read[2]==L's'&&read[3]==L's')
+						{
+							DialogBox(hInst, MAKEINTRESOURCE(IDD_DIALOG2), hWnd, Master);
+							hf = CreateFile(ofn.lpstrFile, GENERIC_WRITE,0,(LPSECURITY_ATTRIBUTES) NULL,
+														CREATE_ALWAYS,FILE_ATTRIBUTE_NORMAL,(HANDLE) NULL);
+							encrypt(master,read);
+							md5fun(read,md5);
+							mdread = new wchar_t[wcslen(read)+33];
+							swprintf(mdread,L"%s%s",md5,read);
+							WriteFile(hf,mdread,2*wcslen(mdread),&byteswritten,NULL);
+							CloseHandle(hf);	
+						}
+						else
+						{
+							MessageBox(hWnd,L"Wrong Master Password !",NULL,MB_ICONERROR);
+							savin=0;
+						};
+					}
+					else
+					{
+						MessageBox(hWnd,L"The pass file is Invalid or Damaged",NULL,MB_ICONERROR);
 					};
 				}
 				break;
@@ -709,6 +758,7 @@ INT_PTR CALLBACK Sav(HWND spDlg, UINT message, WPARAM wParam, LPARAM lParam)
 								SendMessage(hWnd, WM_SETTEXT, 0, (LPARAM)szTitle2);
 								hMenu = GetMenu(hWnd);
 								EnableMenuItem(hMenu,ID_VIEW_VIEWPASSWD,MF_ENABLED);
+								EnableMenuItem(hMenu,ID_VIEW_CHANGEMASTERPASSWORD,MF_ENABLED);
 								EnableMenuItem(hMenu,ID_FILE_CLOSE,MF_ENABLED);
 							};
 						}
@@ -752,7 +802,7 @@ INT_PTR CALLBACK Master(HWND mpsav, UINT message, WPARAM wParam, LPARAM lParam)
 			switch(LOWORD(wParam))
 			{
 			case IDOK:
-				GetWindowText(hWndMasterEdit,master,50);
+				GetWindowText(hWndMasterEdit,master,100);
 				savin=1;
 				EndDialog(mpsav, LOWORD(wParam));
 				break;
@@ -777,24 +827,23 @@ INT_PTR CALLBACK View(HWND hView, UINT message, WPARAM wParam, LPARAM lParam)
 	UNREFERENCED_PARAMETER(lParam);
 	hList=GetDlgItem(hView,IDC_LIST1);
 	hWndViewCheck=GetDlgItem(hView,IDC_CHECK1);
-//	int d;
 	switch (message)
 	{
 	case WM_INITDIALOG:
 			SendMessageW(hList,LVS_SINGLESEL,0,0);
-			LvCol.mask=LVCF_TEXT|LVCF_WIDTH|LVCF_SUBITEM;    // Type of mask                                
-			LvCol.pszText=L"S No.";                            // First Header Text
-			LvCol.cx=0x26;                                   // width of column
+			LvCol.mask=LVCF_TEXT|LVCF_WIDTH|LVCF_SUBITEM;				   // Type of mask                                
+			LvCol.pszText=L"S No.";										   // First Header Text
+			LvCol.cx=0x26;												   // width of column
 		
-			SendMessageW(hList,LVM_INSERTCOLUMN,0,(LPARAM)&LvCol); // Insert/Show the coloum
-			LvCol.cx=0x70;											 // width between each coloum
-			LvCol.pszText=L"Website";                            // Next coloum
-			SendMessageW(hList,LVM_INSERTCOLUMN,1,(LPARAM)&LvCol); // ...
+			SendMessageW(hList,LVM_INSERTCOLUMN,0,(LPARAM)&LvCol);		  // Insert/Show the coloum
+			LvCol.cx=0x70;												  // width between each coloum
+			LvCol.pszText=L"Website";									  // Next coloum
+			SendMessageW(hList,LVM_INSERTCOLUMN,1,(LPARAM)&LvCol);		// ...
 			LvCol.cx=0x40;
-			LvCol.pszText=L"Username";                            //
+			LvCol.pszText=L"Username";
 			SendMessageW(hList,LVM_INSERTCOLUMN,2,(LPARAM)&LvCol);
 			LvCol.cx=0x50;
-			LvCol.pszText=L"PassWd";                            //
+			LvCol.pszText=L"PassWd";
 			SendMessageW(hList,LVM_INSERTCOLUMN,3,(LPARAM)&LvCol);
 			LvCol.cx=0x100;
 			LvCol.pszText=L"Others";
@@ -1023,15 +1072,15 @@ INT_PTR CALLBACK View(HWND hView, UINT message, WPARAM wParam, LPARAM lParam)
 void listman()
 	{
 		colorflag=0;
-		n=0;row=0;column=1;k=0;			//	Items
-		LvItem.mask=LVIF_TEXT;   // Text Style
+		n=0;row=0;column=1;k=0;														//	Items
+		LvItem.mask=LVIF_TEXT;														// Text Style
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 		ListView_SetExtendedListViewStyle(hList, LVS_EX_FULLROWSELECT);
-		LvItem.iItem=0;          // choose item  
-		LvItem.iSubItem=0;       // Put in first coluom
-		LvItem.pszText=L"1"; // Text to display (can be from a char variable) (Items)
-		SendMessageW(hList,LVM_INSERTITEM,0,(LPARAM)&LvItem); // Send info to the Listview
+		LvItem.iItem=0;															    // choose item  
+		LvItem.iSubItem=0;															// Put in first coluom
+		LvItem.pszText=L"1";														// Text to display (can be from a char variable) (Items)
+		SendMessageW(hList,LVM_INSERTITEM,0,(LPARAM)&LvItem);						// Send info to the Listview
 		readsize=wcslen(read)+1;
 		bufr = new wchar_t[readsize+1];
 		while(read[n]!=L'▲'&&n<readsize)
@@ -1049,7 +1098,7 @@ void listman()
 				k++;
 			};
 			bufr[k]=0;
-			LvItem.iSubItem=column;       // Put in first coluom
+			LvItem.iSubItem=column;												 // Put in first coluom
 			if(hidepasswd==1&&column==3)
 			{
 				for(int n=0;n<k;n++)
@@ -1077,19 +1126,19 @@ void listman()
 			{
 				colorflag=1;
 			}
-			LvItem.pszText=bufr; // Text to display (can be from a char variable) (Items)
+			LvItem.pszText=bufr;												 // Text to display (can be from a char variable) (Items)
 			LvItem.cchTextMax = wcslen(LvItem.pszText);
-			SendMessageW(hList,LVM_SETITEM,0,(LPARAM)&LvItem); // Send info to the Listview
+			SendMessageW(hList,LVM_SETITEM,0,(LPARAM)&LvItem);					 // Send info to the Listview
 			column++;
 			if(read[n]==L'▲'&&(n<readsize-1))
 			{
 				row++;
 				column=1;
-				LvItem.iItem=row;          // choose item  
-				LvItem.iSubItem=0;       // Put in first coluom
+				LvItem.iItem=row;												 // choose item  
+				LvItem.iSubItem=0;												 // Put in first coluom
 				swprintf(snbuf,L"%d",row+1);
-				LvItem.pszText=snbuf; // Text to display (can be from a char variable) (Items)
-				SendMessageW(hList,LVM_INSERTITEM,0,(LPARAM)&LvItem); // Send info to the Listview
+				LvItem.pszText=snbuf;											 // Text to display (can be from a char variable) (Items)
+				SendMessageW(hList,LVM_INSERTITEM,0,(LPARAM)&LvItem);			 // Send info to the Listview
 			};
 			n++;
 		};
