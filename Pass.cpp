@@ -2,7 +2,8 @@
 #include "AutoAero.h"
 #include "Pass.h"
 #include "core.h"
-#include "passcrypt.cpp"
+#include "Crypt-AES\Rijndael.h"
+#include "passcrypt.h"
 
 
 
@@ -42,7 +43,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
    hInst = hInstance;						 // Store instance handle in our global variable
 
     hWnd = CreateWindow(szWindowClass, szTitle, WS_OVERLAPPED|WS_CAPTION|WS_SYSMENU|WS_MINIMIZEBOX|BN_SETFOCUS,
-		   CW_USEDEFAULT, 0, 280, 350, NULL, NULL, hInstance, NULL);
+		   CW_USEDEFAULT, 0, 290, 350, NULL, NULL, hInstance, NULL);
 	ZeroMemory(&ofn, sizeof(ofn));
 	ofn.lStructSize = sizeof(ofn);
 	ofn.hwndOwner = hWnd;
@@ -219,27 +220,32 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 						read = &mdread[32];
 						swprintf(mdcheck,L"%0.32s",mdread);
 						md5fun(read,md5);
+						read2 = new wchar_t[(filesize/2)-28];
+						swprintf(read2,L"%s",read);
 						if(!wcscmp(md5,mdcheck))
 						{
 							n=0;row=0;column=1;k=0;
 							DialogBox(hInst, MAKEINTRESOURCE(IDD_DIALOG4), hWnd, Master);
-							decrypt(master,read);
-							if(read[0]==L'p'&&read[1]==L'a'&&read[2]==L's'&&read[3]==L's')
+							if(savin)
 							{
-								swprintf(szTitle2,L"PassWd Mgr - %s",ofn.lpstrFileTitle);
-								SendMessage(hWnd, WM_SETTEXT, 0, (LPARAM)szTitle2);
-								DialogBox(hInst, MAKEINTRESOURCE(IDD_DIALOG3), hWnd, View);
-								hMenu = GetMenu(hWnd);
-								EnableMenuItem(hMenu,ID_VIEW_VIEWPASSWD,MF_ENABLED);
-								EnableMenuItem(hMenu,ID_VIEW_CHANGEMASTERPASSWORD,MF_ENABLED);
-								EnableMenuItem(hMenu,ID_FILE_CLOSE,MF_ENABLED);
-								DrawMenuBar(hWnd);
+								read = decryptaes(master,read);
+								if(read[0]==L'p'&&read[1]==L'a'&&read[2]==L's'&&read[3]==L's')
+								{
+									swprintf(szTitle2,L"PassWd Mgr - %s",ofn.lpstrFileTitle);
+									SendMessage(hWnd, WM_SETTEXT, 0, (LPARAM)szTitle2);
+									DialogBox(hInst, MAKEINTRESOURCE(IDD_DIALOG3), hWnd, View);
+									hMenu = GetMenu(hWnd);
+									EnableMenuItem(hMenu,ID_VIEW_VIEWPASSWD,MF_ENABLED);
+									EnableMenuItem(hMenu,ID_VIEW_CHANGEMASTERPASSWORD,MF_ENABLED);
+									EnableMenuItem(hMenu,ID_FILE_CLOSE,MF_ENABLED);
+									DrawMenuBar(hWnd);
+								}
+								else
+								{
+									MessageBox(hWnd,L"Wrong Master Password !",NULL,MB_ICONERROR);
+									savin=0;
+								};
 							}
-							else
-							{
-								MessageBox(hWnd,L"Wrong Master Password !",NULL,MB_ICONERROR);
-								savin=0;
-							};
 						}
 						else
 						MessageBox(hWnd,L"The pass file is Invalid or Damaged",NULL,MB_ICONERROR);
@@ -305,10 +311,10 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 							hf = CreateFile(ofn.lpstrFile, GENERIC_READ|GENERIC_WRITE,0,(LPSECURITY_ATTRIBUTES) NULL,
 											CREATE_ALWAYS,FILE_ATTRIBUTE_NORMAL,(HANDLE) NULL);
 							read = &mdread[32];
-							decrypt(master,read);
+							read = decryptaes(master,read);
 							write = new wchar_t[wcslen(read)+5+wcslen(web)+wcslen(uname)+wcslen(no)+wcslen(oth)+10];
 							swprintf(write,L"%s▲%s↔%s↔%s↔%s↔%s",read,web,uname,no,oth,strtim);		//↔ is alt 29 | 5s alt 30
-							encrypt(master,write);
+							write = encryptaes(master,write);
 							md5fun(write,md5);
 							mdwrite = new wchar_t[wcslen(write)+33];
 							swprintf(mdwrite,L"%s%s",md5,write);
@@ -452,7 +458,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 					CloseHandle(hf);
 					n=0;row=0;column=1;k=0;
 					read = &mdread[32];
-					decrypt(master,read);
+					read = decryptaes(master,read);
 					if(read[0]==L'p'&&read[1]==L'a'&&read[2]==L's'&&read[3]==L's')
 					{
 						DialogBox(hInst, MAKEINTRESOURCE(IDD_DIALOG3), hWnd, View);
@@ -485,13 +491,13 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 					{
 						n=0;row=0;column=1;k=0;
 						DialogBox(hInst, MAKEINTRESOURCE(IDD_DIALOG4), hWnd, Master);
-						decrypt(master,read);
+						read = decryptaes(master,read);
 						if(read[0]==L'p'&&read[1]==L'a'&&read[2]==L's'&&read[3]==L's')
 						{
 							DialogBox(hInst, MAKEINTRESOURCE(IDD_DIALOG2), hWnd, Master);
 							hf = CreateFile(ofn.lpstrFile, GENERIC_WRITE,0,(LPSECURITY_ATTRIBUTES) NULL,
 														CREATE_ALWAYS,FILE_ATTRIBUTE_NORMAL,(HANDLE) NULL);
-							encrypt(master,read);
+							write = encryptaes(master,read);
 							md5fun(read,md5);
 							mdread = new wchar_t[wcslen(read)+33];
 							swprintf(mdread,L"%s%s",md5,read);
@@ -748,7 +754,7 @@ INT_PTR CALLBACK Sav(HWND spDlg, UINT message, WPARAM wParam, LPARAM lParam)
 								swprintf(ofn.lpstrFile,L"%s.pass",ofn.lpstrFile);
 								hf = CreateFile(ofn.lpstrFile, GENERIC_WRITE,0,(LPSECURITY_ATTRIBUTES) NULL,
 												CREATE_ALWAYS,FILE_ATTRIBUTE_NORMAL,(HANDLE) NULL);
-								encrypt(master,write);
+								write = encryptaes(master,write);
 								md5fun(write,md5);
 								mdwrite = new wchar_t[wcslen(write)+33];
 								swprintf(mdwrite,L"%s%s",md5,write);
@@ -868,7 +874,7 @@ INT_PTR CALLBACK View(HWND hView, UINT message, WPARAM wParam, LPARAM lParam)
 				{
 						hf = CreateFile(ofn.lpstrFile, GENERIC_READ|GENERIC_WRITE,0,(LPSECURITY_ATTRIBUTES) NULL,
 										CREATE_ALWAYS,FILE_ATTRIBUTE_NORMAL,(HANDLE) NULL);
-						encrypt(master,write);
+						write = encryptaes(master,write);
 						md5fun(write,md5);
 						mdwrite = new wchar_t[wcslen(write)+33];
 						swprintf(mdwrite,L"%s%s",md5,write);
