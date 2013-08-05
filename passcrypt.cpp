@@ -85,7 +85,7 @@ wchar_t * decryptaes(wchar_t * key,wchar_t * data)
 	char * str = new char[len];
 	char * str2 = new char[len];
 	wcstombs(str,data,len);
-	if(!len%16)
+	if(!(len%16))
 	{
 		crypt.MakeKey((char *)pm.digest,"\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0",16,16);
 		crypt.Decrypt(str,str2,len,0);
