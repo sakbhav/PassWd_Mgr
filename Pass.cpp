@@ -242,8 +242,23 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 								}
 								else
 								{
-									MessageBox(hWnd,L"Wrong Master Password !",NULL,MB_ICONERROR);
-									savin=0;
+									read2 = decryptrc4(master,read2);
+									if(read2[0]==L'p'&&read2[1]==L'a'&&read2[2]==L's'&&read2[3]==L's')
+									{
+										hf = CreateFile(ofn.lpstrFile, GENERIC_WRITE,0,(LPSECURITY_ATTRIBUTES) NULL,
+														CREATE_ALWAYS,FILE_ATTRIBUTE_NORMAL,(HANDLE) NULL);
+										write = encryptaes(master,read2);
+										md5fun(read2,md5);
+										mdread = new wchar_t[wcslen(read2)+33];
+										swprintf(mdread,L"%s%s",md5,read2);
+										WriteFile(hf,mdread,2*wcslen(mdread),&byteswritten,NULL);
+										CloseHandle(hf);
+									}
+									else
+									{
+										MessageBox(hWnd,L"Wrong Master Password !",NULL,MB_ICONERROR);
+										savin=0;
+									}
 								};
 							}
 						}

@@ -113,3 +113,26 @@ wchar_t * decryptaes(wchar_t * key,wchar_t * data)
 	data[i+1] = 0;
 	return data;
 }
+wchar_t * decryptrc4(wchar_t * da,wchar_t * str)
+{
+	HCRYPTPROV hCryptProv;
+	HCRYPTKEY hKey;
+	DWORD dwCount = 16;
+	MD5Context pm;
+	if(!CryptAcquireContext(&hCryptProv, NULL, MS_ENHANCED_PROV, PROV_RSA_FULL, CRYPT_VERIFYCONTEXT))
+	return 0;
+	memset(&pm, 0, sizeof(MD5Context));
+	if(!CryptCreateHash(hCryptProv, CALG_MD5, 0, 0, &pm.hHash))
+		return 0;
+	if(!CryptHashData(pm.hHash, (PBYTE)da, wcslen(da), 0))
+		return 0;
+	if(!CryptGetHashParam(pm.hHash, HP_HASHVAL, pm.digest, &dwCount, 0))
+		return 0;	
+	if(!CryptDeriveKey(hCryptProv, CALG_RC4,pm.hHash,CRYPT_EXPORTABLE,&hKey))
+		return 0;
+	DWORD le =wcslen(str);
+	DWORD a=le*2;
+	if(!CryptDecrypt(hKey,0,TRUE,0,(PBYTE)str,&a))
+		return 0;
+	return str;
+}
