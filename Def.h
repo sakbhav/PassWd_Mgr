@@ -50,7 +50,7 @@ wchar_t * uname=0,* web=0,* oth=0;
 wchar_t alpha[10];
 wchar_t snbuf[3];
 wchar_t sy[10];
-wchar_t * read=0,* write=0,* bufr=0,* mdwrite=0,* mdread=0;
+wchar_t * read=0,* write=0,* bufr=0,* mdwrite=0,* mdread=0,* read2=0;
 wchar_t md5[33],mdcheck[33];
 wchar_t * no;//=core(num,nnum,nsym,nset,pset,tim,sym);
 //wchar_t * md;

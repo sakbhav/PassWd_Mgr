@@ -253,6 +253,14 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 										swprintf(mdread,L"%s%s",md5,read2);
 										WriteFile(hf,mdread,2*wcslen(mdread),&byteswritten,NULL);
 										CloseHandle(hf);
+										swprintf(szTitle2,L"PassWd Mgr - %s",ofn.lpstrFileTitle);
+										SendMessage(hWnd, WM_SETTEXT, 0, (LPARAM)szTitle2);
+										DialogBox(hInst, MAKEINTRESOURCE(IDD_DIALOG3), hWnd, View);
+										hMenu = GetMenu(hWnd);
+										EnableMenuItem(hMenu,ID_VIEW_VIEWPASSWD,MF_ENABLED);
+										EnableMenuItem(hMenu,ID_VIEW_CHANGEMASTERPASSWORD,MF_ENABLED);
+										EnableMenuItem(hMenu,ID_FILE_CLOSE,MF_ENABLED);
+										DrawMenuBar(hWnd);
 									}
 									else
 									{

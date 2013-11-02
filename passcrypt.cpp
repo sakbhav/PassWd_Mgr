@@ -3,7 +3,7 @@
 #pragma warning(disable:4995)
 #pragma warning(disable:4018)
 
-#include "crypt-AES\Rijndaelmain.h"
+#include "crypt-AES\Rijndael.h"
 #include <stdio.h>
 #include <wchar.h>
 #include <windows.h>
