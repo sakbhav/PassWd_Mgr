@@ -1,3 +1,19 @@
+/*	Copyright 2013 Saket Srivastava
+*
+*	Licensed under the Apache License, Version 2.0 (the "License");
+*	you may not use this file except in compliance with the License.
+*	You may obtain a copy of the License at
+*
+*		http://www.apache.org/licenses/LICENSE-2.0
+*
+*	Unless required by applicable law or agreed to in writing, software
+*	distributed under the License is distributed on an "AS IS" BASIS,
+*	WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+*	See the License for the specific language governing permissions and
+*	limitations under the License.
+*/
+
+
 #include<time.h>
 #include<stdio.h>
 #include<malloc.h>
@@ -6,18 +22,9 @@ bool timchk(struct tm * given,int reqday,int reqmon,int reqyear)
 {
     int diffday,diffmon,diffyear;
 	time_t localtim;
-//	struct tm * given = (struct tm *)malloc(sizeof(struct tm));
 	struct tm * local = (struct tm *)malloc(sizeof(struct tm));
 	time(&localtim);
 	local = localtime(&localtim);
-/*	printf("Enter the date: ");
-	scanf("%d",&given->tm_mday);
-	printf("Enter the month: ");
-	scanf("%d",&given->tm_mon);
-	printf("Enter the year: ");
-	scanf("%d",&given->tm_year);
-	char * mon[]={"Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"};
-	printf("%d-%s-%d",local->tm_mday,mon[local->tm_mon],local->tm_year+1900);*/
 	if(local->tm_mday >= given->tm_mday)
 	diffday = local->tm_mday - given->tm_mday;
 	else
@@ -58,5 +65,4 @@ bool timchk(struct tm * given,int reqday,int reqmon,int reqyear)
 		}
 	}
 	return 1;
-//	printf("\n%d-%d-%d",diffday,diffmon,diffyear+1900);
 }
