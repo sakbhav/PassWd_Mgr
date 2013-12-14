@@ -537,10 +537,10 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 							hf = CreateFile(ofn.lpstrFile, GENERIC_WRITE,0,(LPSECURITY_ATTRIBUTES) NULL,
 														CREATE_ALWAYS,FILE_ATTRIBUTE_NORMAL,(HANDLE) NULL);
 							write = encryptaes(master,read);
-							md5fun(read,md5);
-							mdread = new wchar_t[wcslen(read)+33];
-							swprintf(mdread,L"%s%s",md5,read);
-							WriteFile(hf,mdread,2*wcslen(mdread),&byteswritten,NULL);
+							md5fun(write,md5);
+							mdwrite = new wchar_t[wcslen(write)+33];
+							swprintf(mdwrite,L"%s%s",md5,write);
+							WriteFile(hf,mdwrite,2*wcslen(mdwrite),&byteswritten,NULL);
 							CloseHandle(hf);	
 						}
 						else
