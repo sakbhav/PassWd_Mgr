@@ -59,7 +59,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
    hInst = hInstance;						 // Store instance handle in our global variable
 
     hWnd = CreateWindow(szWindowClass, szTitle, WS_OVERLAPPED|WS_CAPTION|WS_SYSMENU|WS_MINIMIZEBOX|BN_SETFOCUS,
-		   CW_USEDEFAULT, 0, 290, 350, NULL, NULL, hInstance, NULL);
+		   CW_USEDEFAULT, 0, 290, 330, NULL, NULL, hInstance, NULL);
 	ZeroMemory(&ofn, sizeof(ofn));
 	ofn.lStructSize = sizeof(ofn);
 	ofn.hwndOwner = hWnd;
@@ -151,7 +151,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	case WM_CREATE:
 		
 		hWndEdit = CreateWindowEx(	WS_EX_STATICEDGE,L"Edit",NULL,ES_AUTOHSCROLL|WS_VISIBLE|WS_CHILD|WS_BORDER,   
-									10,250,253,25,hWnd,NULL,
+									10,230,253,25,hWnd,NULL,
 									(HINSTANCE) GetWindowLong(hWnd, GWL_HINSTANCE),NULL );
 		hWndStatic = CreateWindow(	L"STATIC",L"Length of Generated PassWd:",WS_VISIBLE|WS_CHILD,   
 									10,10,200,25,hWnd,NULL,
@@ -179,13 +179,16 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 									NULL,NULL,20,25,hWnd,UPDOWN,
 									hInst,hWndEditUpDown,99,0,8);
 		hWndButton = CreateWindow( 	L"Button",L"Generate",WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
-									85,215,103,20,hWnd,(HMENU)IDC_BTN,
+									10,190,105,20,hWnd,(HMENU)IDC_BTN,
+									(HINSTANCE)GetWindowLong(hWnd, GWL_HINSTANCE), NULL);
+		hWndSaveBtn = CreateWindow( L"Button",L"Save",WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
+									160,190,105,20,hWnd,(HMENU)ID_FILE_SAVE,
 									(HINSTANCE)GetWindowLong(hWnd, GWL_HINSTANCE), NULL);
 		hWndCheck = CreateWindow( 	L"button",L"Alphanumeric",WS_VISIBLE | WS_CHILD | BS_AUTOCHECKBOX,
 									10,70,103,20,hWnd,(HMENU)IDC_ALPHACHK,
 									(HINSTANCE)GetWindowLong(hWnd, GWL_HINSTANCE), NULL);
 		Edit_Enable(hWndEditAlpha,FALSE);
-		hWndCheckSym = CreateWindow( 	L"button",L"Symbols",WS_VISIBLE | WS_CHILD | BS_AUTOCHECKBOX,
+		hWndCheckSym = CreateWindow(L"button",L"Symbols",WS_VISIBLE | WS_CHILD | BS_AUTOCHECKBOX,
 									10,105,143,20,hWnd,(HMENU)IDC_SYMCHK,
 									(HINSTANCE)GetWindowLong(hWnd, GWL_HINSTANCE), NULL);
 		Edit_Enable(hWndEditSym,FALSE);
@@ -618,6 +621,7 @@ INT_PTR CALLBACK Pref(HWND hPrefDlg, UINT message, WPARAM wParam, LPARAM lParam)
 		ComboBox_AddString(hWndPrefCombo,L"8 month");
 		ComboBox_AddString(hWndPrefCombo,L"10 month");
 		ComboBox_AddString(hWndPrefCombo,L"1 year");
+		ComboBox_AddString(hWndPrefCombo,L"Never");
 		if(req_mon>0&&req_mon<7)
 		{
 			SendMessage(hWndPrefCombo,CB_SETCURSEL,req_mon+1,NULL);
@@ -641,6 +645,10 @@ INT_PTR CALLBACK Pref(HWND hPrefDlg, UINT message, WPARAM wParam, LPARAM lParam)
 		else if(req_year==1)
 		{
 			SendMessage(hWndPrefCombo,CB_SETCURSEL,10,NULL);
+		}
+		else if(req_year==200)
+		{
+			SendMessage(hWndPrefCombo,CB_SETCURSEL,11,NULL);
 		}
 		return (INT_PTR)TRUE;
 
@@ -688,6 +696,12 @@ INT_PTR CALLBACK Pref(HWND hPrefDlg, UINT message, WPARAM wParam, LPARAM lParam)
 				req_day = 0;
 				req_mon = 0;
 				req_year = 1;
+			}
+			if(combotemp==11)
+			{
+				req_day = 0;
+				req_mon = 0;
+				req_year = 200;
 			}
 			RegSetValueEx(pKey,L"day",NULL,REG_DWORD,(CONST BYTE *)&req_day,sizeof(DWORD));
 			RegSetValueEx(pKey,L"month",NULL,REG_DWORD,(CONST BYTE *)&req_mon,sizeof(DWORD));
@@ -1166,8 +1180,9 @@ void listman()
 				timtemp[3] = 0;
 				givch->tm_year = _wtoi(timtemp);
 				swprintf(bufr,L"%d-%s-%d",givch->tm_mday,mon[givch->tm_mon],givch->tm_year+1900);
-			}
-			if(column==5&&(!timchk(givch,req_day,req_mon,req_year)))
+			};
+			int d = timchk(givch,req_day,req_mon,req_year);
+			if(column==5&&(!d))
 			{
 				colorflag=1;
 			}

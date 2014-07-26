@@ -114,6 +114,7 @@ HFONT hFont,hFontCheck,hFontAbt,hFontHpl;
 HWND hWndHelpSt;
 HWND hWndHelpEdit;
 HWND hWndPrefCombo;
+HWND hWndSaveBtn;
 //HWND hWndMenu;
 HGLOBAL hMem;
 HKEY pKey;

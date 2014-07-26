@@ -30,14 +30,14 @@ bool timchk(struct tm * given,int reqday,int reqmon,int reqyear)
 	else
 	{
 	    if(local->tm_mon==1||local->tm_mon==3||local->tm_mon==5||local->tm_mon==7||local->tm_mon==8||local->tm_mon==10)
-            local->tm_mday=+31;
+            local->tm_mday+=31;
         else if(local->tm_mon==4||local->tm_mon==6||local->tm_mon==9||local->tm_mon==11)
-            local->tm_mday=+30;
+            local->tm_mday+=30;
         else if(local->tm_mon==2)
-            local->tm_mday=+28;
+            local->tm_mday+=28;
         else if(local->tm_mon==0)
         {
-            local->tm_mday=+31;
+            local->tm_mday+=31;
             local->tm_year--;
             local->tm_mon=12;
         }
@@ -48,7 +48,7 @@ bool timchk(struct tm * given,int reqday,int reqmon,int reqyear)
 	diffmon = local->tm_mon - given->tm_mon;
 	else
 	{
-	    local->tm_mon=+12;
+	    local->tm_mon+=12;
 	    local->tm_year--;
 	};
 	diffyear = local->tm_year - given->tm_year;
